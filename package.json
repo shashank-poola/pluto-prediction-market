@@ -22,5 +22,9 @@
   "packageManager": "bun@1.2.22",
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.1.0",
+    "prisma": "^7.1.0"
   }
 }

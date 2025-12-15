@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pluto_postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pluto
+    volumes:
+      - pluto_pg:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7
+    container_name: pluto_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+volumes:
+  pluto_pg:
