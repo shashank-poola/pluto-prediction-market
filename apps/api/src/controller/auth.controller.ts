@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
-import { PrivyClient } from "@privy-io/server-auth";
+import { PrivyClient } from "@privy-io/node";
 import jwt from "jsonwebtoken";
+import prisma from "db-pluto";
 
 const privy = new PrivyClient(
     process.env.PRIVY_APP_ID!,
@@ -20,19 +21,36 @@ export async function privyAuthHandler(req: Request, res: Response) {
 
         const token = authHeader.replace("Bearer ", "");
 
+        // Verify the Privy token
         const verifiedClaims = await privy.verifyAuthToken(token);
         const privyId = verifiedClaims.userId;
         const email = (verifiedClaims.email as any)?.address ?? null;
 
-        const sessionToken = signJWT({ userId: privyId });
+        // Check if user exists in database
+        let user = await prisma.user.findUnique({
+            where: { privyId }
+        });
+
+        // If user doesn't exist, create a new one
+        if (!user) {
+            user = await prisma.user.create({
+                data: {
+                    privyId,
+                    email: email || undefined
+                }
+            });
+        }
+
+        // Generate JWT session token
+        const sessionToken = signJWT({ userId: user.id });
 
         return res.json({
             success: true,
             user: {
-                id: privyId,
-                privyId,
-                email,
-                createdAt: new Date().toISOString()
+                id: user.id,
+                privyId: user.privyId,
+                email: user.email,
+                createdAt: user.createdAt
             },
             sessionToken
         });
